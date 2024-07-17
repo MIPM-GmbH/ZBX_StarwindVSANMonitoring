@@ -1,0 +1,750 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 02e4df4f20b848e79267641790f241da
+      name: Templates/Virtualization
+  templates:
+    - uuid: 75f25529e648417a9c81fb95df808473
+      template: 'Starwind VSAN by HTTPv2'
+      name: 'Starwind VSAN by HTTPv2'
+      description: 'Basic Starwind vSAN. More to come'
+      groups:
+        - name: Templates/Virtualization
+      items:
+        - uuid: a0160b3f26e64c198c8752d84c70f048
+          name: 'starwind vSAN request Host information'
+          type: SCRIPT
+          key: stwi.getHost
+          history: 1d
+          trends: '0'
+          value_type: TEXT
+          params: |
+            function getBearerToken() {
+                const auth_url = api_url+ 'api/v2/account/login';
+                const payload = JSON.stringify({"userName": username,"password": pw,"autologin": false});
+                var req = new HttpRequest();
+                const response= req.post(auth_url,payload);
+                return response;
+            }
+            function request(url) {
+                api_request = new HttpRequest();
+                api_request.addHeader('Authorization: ' + token);
+                api_request.addHeader('Content-Type: application/json');
+                Zabbix.log(4, '[ STAR] Sending request: ' + url);
+                var response = api_request.get(url);
+                return response;
+            }
+            function logoff() {
+                var logouturl = api_url + 'api/v2/account/logout'
+                var req = new HttpRequest();
+                req.addHeader('Authorization: ' + token);
+                req.addHeader('Content-Type: application/x-www-form-urlencoded ');
+                const response= req.post(logouturl);
+                return response;
+            }
+            var obj = JSON.parse(value);
+            var api_url = obj.url;
+            var username = obj.username;
+            var pw = btoa(obj.pw);
+            var token = JSON.parse(getBearerToken()).accessToken;
+            var metric = request(api_url + 'api/v1/managedappliances?&includeNetworkAdapters=false');
+            var logout = logoff();
+            return metric;
+          description: 'Get Host information'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.rows[?(@.nodeName=="{$STWI.NODENAME}")]'
+          parameters:
+            - name: pw
+              value: '{$STWI.PW}'
+            - name: url
+              value: '{$STWI.URL}'
+            - name: username
+              value: '{$STWI.USER}'
+        - uuid: e13c4494beff4047a58989eea45c20b2
+          name: 'Get General Info of Appliance'
+          type: HTTP_AGENT
+          key: stwi.reqInfo
+          delay: 10m
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+          timeout: 3s
+          url: '{$STWI.URL}/api/v1/'
+        - uuid: 1d17cfb3ed0d4537811eb826de9b517b
+          name: 'starwind vSAN request Virtual Disk Metrics'
+          type: SCRIPT
+          key: stwi.reqMetrics
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+          params: |
+            function getBearerToken() {
+                const auth_url = api_url+ 'api/v2/account/login';
+                const payload = JSON.stringify({"userName": username,"password": pw,"autologin": false});
+                var req = new HttpRequest();
+                const response= req.post(auth_url,payload);
+                return response;
+            }
+            function request(url) {
+                api_request = new HttpRequest();
+                api_request.addHeader('Authorization: ' + token);
+                api_request.addHeader('Content-Type: application/json');
+                Zabbix.log(4, '[ STAR] Sending request: ' + url);
+                var response = api_request.get(url);
+                return response;
+            }
+            function logoff() {
+                var logouturl = api_url + 'api/v2/account/logout'
+                var req = new HttpRequest();
+                req.addHeader('Authorization: ' + token);
+                req.addHeader('Content-Type: application/x-www-form-urlencoded ');
+                const response= req.post(logouturl);
+                return response;
+            }
+            var obj = JSON.parse(value);
+            var api_url = obj.url;
+            var username = obj.username;
+            var pw = btoa(obj.pw);
+            var token = JSON.parse(getBearerToken()).accessToken;
+            var metric = request(api_url + 'api/v1/virtualDisks?');
+            var logout = logoff();
+            return metric;
+          description: 'Gets Metrics form Dashboard'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.rows[?(@.nodeName=="{$STWI.NODENAME}")]'
+          timeout: 5s
+          parameters:
+            - name: pw
+              value: '{$STWI.PW}'
+            - name: url
+              value: '{$STWI.URL}'
+            - name: username
+              value: '{$STWI.USER}'
+          tags:
+            - tag: application
+              value: vSAN
+        - uuid: 9638f6bd28564662a449db4b6b682369
+          name: 'starwind systemd services'
+          type: SCRIPT
+          key: stwi.services
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+          params: |
+            function getBearerToken() {
+                const auth_url = api_url+ 'api/v2/account/login';
+                const payload = JSON.stringify({"userName": username,"password": pw,"autologin": false});
+                var req = new HttpRequest();
+                const response= req.post(auth_url,payload);
+                return response;
+            }
+            function request(url) {
+                api_request = new HttpRequest();
+                api_request.addHeader('Authorization: ' + token);
+                api_request.addHeader('Content-Type: application/json');
+                Zabbix.log(4, '[ STAR] Sending request: ' + url);
+                var response = api_request.get(url);
+                return response;
+            }
+            function logoff() {
+                var logouturl = api_url + 'api/v2/account/logout'
+                var req = new HttpRequest();
+                req.addHeader('Authorization: ' + token);
+                req.addHeader('Content-Type: application/x-www-form-urlencoded ');
+                const response= req.post(logouturl);
+                return response;
+            }
+            var obj = JSON.parse(value);
+            var api_url = obj.url;
+            var username = obj.username;
+            var pw = btoa(obj.pw);
+            var token = JSON.parse(getBearerToken()).accessToken;
+            var metric = request(api_url + 'api/v1/servicehost/servicemanager/services');
+            var logout = logoff();
+            return metric;
+          description: 'Gets Services info'
+          parameters:
+            - name: pw
+              value: '{$STWI.PW}'
+            - name: url
+              value: '{$STWI.URL}'
+            - name: username
+              value: '{$STWI.USER}'
+          tags:
+            - tag: application
+              value: vSAN
+        - uuid: a3d3e283c1094975b3fbfb81a1b67a26
+          name: 'starwind vSAN Update State'
+          type: SCRIPT
+          key: stwi.updateState
+          delay: 1d
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+          params: |
+            function postreq(url,payload) {
+                var req = new HttpRequest();
+                const response= req.post(url,payload);
+                req.addHeader('Authorization: ' + token);
+                return response;
+            }
+            function request(url) {
+                api_request = new HttpRequest();
+                api_request.addHeader('Authorization: ' + token);
+                api_request.addHeader('Content-Type: application/json');
+                Zabbix.log(4, '[ STAR] Sending request: ' + url);
+                var response = api_request.get(url);
+                return response;
+            }
+            function logoff() {
+                var logouturl = api_url + 'api/v2/account/logout'
+                var req = new HttpRequest();
+                req.addHeader('Authorization: ' + token);
+                req.addHeader('Content-Type: application/x-www-form-urlencoded ');
+                const response= req.post(logouturl);
+                return response;
+            }
+            var obj = JSON.parse(value);
+            var api_url = obj.url;
+            var username = obj.username;
+            var pw = btoa(obj.pw);
+            var token = JSON.parse(postreq(api_url+ 'api/v2/account/login',JSON.stringify({"userName": username,"password": pw,"autologin": false}))).accessToken;
+            postreq(api_url+ 'updater/api/v2/updates/check');
+            var state;
+            do{
+            var state=JSON.parse(request(api_url+ 'updater/api/v2/status/state')).state;
+            }while (state=='CHECKING');
+            var metric = request(api_url + 'updater/api/v2/updates/');
+            var logout = logoff();
+            return metric;
+          description: 'Update State'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.origins
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  json=JSON.parse(value);
+                  var outpack = [];
+                  json.forEach(function(element){
+                   var componentname = element.name;
+                   element.packages.forEach(function(element2){
+                  element2.componentName = componentname
+                  outpack.push(element2)
+                  })
+                  });
+                  return JSON.stringify(outpack);
+          timeout: 45s
+          parameters:
+            - name: pw
+              value: '{$STWI.PW}'
+            - name: url
+              value: '{$STWI.URL}'
+            - name: username
+              value: '{$STWI.USER}'
+          tags:
+            - tag: application
+              value: vSAN
+      discovery_rules:
+        - uuid: 5ec0b07df4284ef295d4b6780c1f7591
+          name: 'Starwind Discover Virtual Disk Status'
+          type: DEPENDENT
+          key: stwi.discover
+          delay: '0'
+          lifetime: 30d
+          enabled_lifetime_type: DISABLE_NEVER
+          item_prototypes:
+            - uuid: 78d5581cc21c48ce827345b8ba21e8fd
+              name: 'Availability of Virtual Disk {#VOLUME}'
+              type: DEPENDENT
+              key: 'stwi.discover.getAvail[{#VOLUME}]'
+              delay: '0'
+              history: 90d
+              trends: '0'
+              value_type: TEXT
+              description: 'availability of volume'
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - $.availability
+              master_item:
+                key: 'stwi.discoverMetrics[{#VOLUME}]'
+              tags:
+                - tag: metric
+                  value: availability
+                - tag: Volume
+                  value: '{#VOLUME}'
+                - tag: 'vSAN Node Name'
+                  value: '{#NODENAME}'
+              trigger_prototypes:
+                - uuid: a6b1d4b1458e4fad9d100df3dd8efd93
+                  expression: 'last(/Starwind VSAN by HTTPv2/stwi.discover.getAvail[{#VOLUME}])<>"highly_available"'
+                  name: 'Availability of Virtual Disk {#VOLUME} has degraded'
+                  opdata: 'The Availability is  {ITEM.LASTVALUE1}'
+                  priority: WARNING
+                  description: 'Triggers if volume is not highly available'
+                  manual_close: 'YES'
+            - uuid: 5b5da7e9e54f4814b622d6d010a086ae
+              name: 'Get Status from Virtual Disk {#VOLUME}'
+              type: DEPENDENT
+              key: 'stwi.discover.getStatus[{#VOLUME}]'
+              delay: '0'
+              history: 90d
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - $.state
+              master_item:
+                key: 'stwi.discoverMetrics[{#VOLUME}]'
+              tags:
+                - tag: metric
+                  value: status
+                - tag: Volume
+                  value: '{#VOLUME}'
+                - tag: 'vSAN Node Name'
+                  value: '{#NODENAME}'
+              trigger_prototypes:
+                - uuid: f75551b621ca48b3a06e7ea4d4e16844
+                  expression: 'last(/Starwind VSAN by HTTPv2/stwi.discover.getStatus[{#VOLUME}])<>"online"'
+                  name: 'Status from Virtual Disk {#VOLUME} has changed'
+                  event_name: 'Current status ist  {ITEM.LASTVALUE1}'
+                  priority: WARNING
+                  description: 'The status of the Virtual disks changes'
+            - uuid: 57c1230cd2804b3892ab55a76a267b46
+              name: 'Get Metrics from {#VOLUME} of {#NODENAME}'
+              type: DEPENDENT
+              key: 'stwi.discoverMetrics[{#VOLUME}]'
+              delay: '0'
+              history: '0'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$[?(@.name=="{#VOLUME}")].first()'
+              master_item:
+                key: stwi.reqMetrics
+          master_item:
+            key: stwi.reqMetrics
+          lld_macro_paths:
+            - lld_macro: '{#NODENAME}'
+              path: $.nodeName
+            - lld_macro: '{#VOLUME}'
+              path: $.name
+        - uuid: 67534ab8210747538de68d267db3346c
+          name: 'Get Disk Metrics'
+          type: DEPENDENT
+          key: stwi.discover.DisksMetrics
+          delay: '0'
+          filter:
+            conditions:
+              - macro: '{#NODEID}'
+                value: ^$
+                operator: NOT_MATCHES_REGEX
+                formulaid: A
+          lifetime: 30d
+          enabled_lifetime_type: DISABLE_NEVER
+          description: 'Get read bytes,write bytes, read iops and write iops'
+          item_prototypes:
+            - uuid: 0a33dbd42a124356899838040cbf4780
+              name: 'Get Disk Metrics for {#NODEID}'
+              type: SCRIPT
+              key: 'stwi.discover.DisksMetrics.getMetrics[{#NODEID}]'
+              trends: '0'
+              value_type: TEXT
+              params: |
+                function getBearerToken() {
+                    const auth_url = api_url+ 'api/v2/account/login';
+                    const payload = JSON.stringify({"userName": username,"password": pw,"autologin": false});
+                    var req = new HttpRequest();
+                    const response= req.post(auth_url,payload);
+                    return response;
+                }
+                function request(url) {
+                    api_request = new HttpRequest();
+                    api_request.addHeader('Authorization: ' + token);
+                    api_request.addHeader('Content-Type: application/json');
+                    const payload = JSON.stringify({"period": "live"});
+                    var response = api_request.post(url,payload);
+                    return response;
+                }
+                function logoff() {
+                    var logouturl = api_url + 'api/v2/account/logout'
+                    var req = new HttpRequest();
+                    req.addHeader('Authorization: ' + token);
+                    req.addHeader('Content-Type: application/x-www-form-urlencoded ');
+                    const response= req.post(logouturl);
+                    return response;
+                }
+                var obj = JSON.parse(value);
+                var api_url = obj.url;
+                var username = obj.username;
+                var pw = btoa(obj.pw);
+                var token = JSON.parse(getBearerToken()).accessToken;
+                var nodeid = obj.nodeid;
+                var metric = request(api_url + 'api/v1/managedAppliances/' + nodeid + '/resourceMonitor/disk/query');
+                return metric;
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$.data[-1:].first()'
+              parameters:
+                - name: nodeid
+                  value: '{#NODEID}'
+                - name: pw
+                  value: '{$STWI.PW}'
+                - name: url
+                  value: '{$STWI.URL}'
+                - name: username
+                  value: '{$STWI.USER}'
+            - uuid: 5cbf75e41d984b4398447c5a93a58247
+              name: 'Read Bytes for {#NODENAME}'
+              type: DEPENDENT
+              key: 'stwi.discover.DisksMetrics.getRead_bytes[{#NODEID}]'
+              delay: '0'
+              history: 90d
+              value_type: FLOAT
+              units: Bps
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$.data[0]'
+              master_item:
+                key: 'stwi.discover.DisksMetrics.getMetrics[{#NODEID}]'
+              tags:
+                - tag: metric
+                  value: 'disk read bytes'
+            - uuid: 62fe1b6864b04f38a77135006b94d489
+              name: 'Write Bytes for {#NODENAME}'
+              type: DEPENDENT
+              key: 'stwi.discover.DisksMetrics.getWrite_bytes[{#NODEID}]'
+              delay: '0'
+              history: 90d
+              value_type: FLOAT
+              units: Bps
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$.data[1]'
+              master_item:
+                key: 'stwi.discover.DisksMetrics.getMetrics[{#NODEID}]'
+              tags:
+                - tag: metric
+                  value: 'disk write bytes'
+          master_item:
+            key: stwi.getHost
+          lld_macro_paths:
+            - lld_macro: '{#NODEID}'
+              path: $.id
+            - lld_macro: '{#NODENAME}'
+              path: $.nodeName
+        - uuid: 451eb4d387774b4ca9fa3d879312c957
+          name: 'Discover Services'
+          type: DEPENDENT
+          key: stwi.discover.services
+          delay: '0'
+          filter:
+            conditions:
+              - macro: '{#ID}'
+                value: '{$SERVICES_REGEX_ALLOW}'
+                formulaid: A
+          description: 'Discover Services'
+          item_prototypes:
+            - uuid: 66542cf42a1d48a5b2980b5732d86d7f
+              name: 'Service {#TITLE} status'
+              type: DEPENDENT
+              key: 'stwi.getServices.Status[{#ID}]'
+              delay: '0'
+              trends: '0'
+              value_type: TEXT
+              description: 'Status of service {#TITLE}'
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - $.status
+              master_item:
+                key: 'stwi.getService[{#ID}]'
+              tags:
+                - tag: service
+                  value: '{#ID}'
+              trigger_prototypes:
+                - uuid: db39baabb86c4bef8dd441ebdc51af49
+                  expression: 'last(/Starwind VSAN by HTTPv2/stwi.getServices.Status[{#ID}])<>"running"'
+                  name: 'Service {#TITLE} is not running'
+                  priority: WARNING
+            - uuid: 9411e9887de54b0492b09f3b29a16d63
+              name: 'Service {#TITLE} Data'
+              type: DEPENDENT
+              key: 'stwi.getService[{#ID}]'
+              delay: '0'
+              history: '0'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$[?(@.id==''{#ID}'')].first()'
+              master_item:
+                key: stwi.services
+          master_item:
+            key: stwi.services
+          lld_macro_paths:
+            - lld_macro: '{#DESC}'
+              path: $.description
+            - lld_macro: '{#ID}'
+              path: $.id
+            - lld_macro: '{#TITLE}'
+              path: $.title
+        - uuid: 05e567c387f2489a8ee10fae93d64d45
+          name: 'Starwind Discover Sync Performance Values'
+          type: DEPENDENT
+          key: stwi.discover.SyncMetrics
+          delay: '0'
+          lifetime: 30d
+          enabled_lifetime_type: DISABLE_NEVER
+          item_prototypes:
+            - uuid: d749f0ebfe0b41a7ba8a8ab0476f327d
+              name: 'Not Synchronized Bytes on {#VOLUME}'
+              type: DEPENDENT
+              key: 'stwi.discover.SyncMetrics.get.notsyncedBytes[{#VOLUME}]'
+              delay: '0'
+              history: 90d
+              description: 'Bytes that are not Synchronized'
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - $.notSynchronizedBytes
+              master_item:
+                key: 'stwi.discover.SyncMetrics.get[{#VOLUME}]'
+              tags:
+                - tag: metric
+                  value: sync
+                - tag: Volume
+                  value: '{#VOLUME}'
+                - tag: 'vSAN Node Name'
+                  value: '{#NODENAME}'
+            - uuid: 46811cce4f9c4232b64d3e7d71b61d07
+              name: 'Sync Status for {#VOLUME}'
+              type: DEPENDENT
+              key: 'stwi.discover.SyncMetrics.get.Status[{#VOLUME}]'
+              delay: '0'
+              history: 90d
+              trends: '0'
+              value_type: TEXT
+              description: 'Sync Status'
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - $.syncStatus
+              master_item:
+                key: 'stwi.discover.SyncMetrics.get[{#VOLUME}]'
+              tags:
+                - tag: metric
+                  value: sync
+                - tag: Volume
+                  value: '{#VOLUME}'
+                - tag: 'vSAN Node Name'
+                  value: '{#NODENAME}'
+            - uuid: 51b8e06a879541b3a3b2869113a85cf8
+              name: 'Synchronized Bytes on {#VOLUME}'
+              type: DEPENDENT
+              key: 'stwi.discover.SyncMetrics.get.syncedBytes[{#VOLUME}]'
+              delay: '0'
+              history: 90d
+              description: 'Synchronized Bytes'
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - $.synchronizedBytes
+              master_item:
+                key: 'stwi.discover.SyncMetrics.get[{#VOLUME}]'
+              tags:
+                - tag: metric
+                  value: sync
+                - tag: Volume
+                  value: '{#VOLUME}'
+                - tag: 'vSAN Node Name'
+                  value: '{#NODENAME}'
+            - uuid: f8b9182842b34e06974c640f1446c696
+              name: 'Synchronized Percents of {#VOLUME}'
+              type: DEPENDENT
+              key: 'stwi.discover.SyncMetrics.get.syncPercent[{#VOLUME}]'
+              delay: '0'
+              history: 90d
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - $.synchronizedPercents
+              master_item:
+                key: 'stwi.discover.SyncMetrics.get[{#VOLUME}]'
+              tags:
+                - tag: metric
+                  value: sync
+                - tag: Volume
+                  value: '{#VOLUME}'
+                - tag: 'vSAN Node Name'
+                  value: '{#NODENAME}'
+            - uuid: 3e490066faea4733947c00e744aadf44
+              name: 'Estimated Time till sync is finished on {#VOLUME} (in Seconds)'
+              type: DEPENDENT
+              key: 'stwi.discover.SyncMetrics.get.time[{#VOLUME}]'
+              delay: '0'
+              history: 90d
+              description: 'Estimated Time till sync is finished'
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - $.estimatedTimeSecond
+              master_item:
+                key: 'stwi.discover.SyncMetrics.get[{#VOLUME}]'
+              tags:
+                - tag: metric
+                  value: sync
+                - tag: Volume
+                  value: '{#VOLUME}'
+                - tag: 'vSAN Node Name'
+                  value: '{#NODENAME}'
+            - uuid: 9ca7139c5136497cafca75565d21f3ce
+              name: 'Get Sync Metrics for {#VOLUME}'
+              type: DEPENDENT
+              key: 'stwi.discover.SyncMetrics.get[{#VOLUME}]'
+              delay: '0'
+              history: '0'
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$[?(@.name=="{#VOLUME}")].synchronizationState.first()'
+              master_item:
+                key: stwi.reqMetrics
+              tags:
+                - tag: metric
+                  value: sync
+                - tag: Volume
+                  value: '{#VOLUME}'
+                - tag: 'vSAN Node Name'
+                  value: '{#NODENAME}'
+          master_item:
+            key: stwi.reqMetrics
+          lld_macro_paths:
+            - lld_macro: '{#NODENAME}'
+              path: $.nodeName
+            - lld_macro: '{#VOLUME}'
+              path: $.name
+        - uuid: 554392b3ab1b4895aa22f5c143d3c924
+          name: 'Discover Update Components'
+          type: DEPENDENT
+          key: stwi.discoverUpdate.Components
+          delay: '0'
+          description: 'Discover various Update Components'
+          item_prototypes:
+            - uuid: 4b5f0b1cadf642b5a79e4eb1e9f06dae
+              name: 'Update information for package {#NAME}'
+              type: DEPENDENT
+              key: 'stwi.getUpdateData[{#NAME}-{#COMPNAME}]'
+              delay: '0'
+              history: '0'
+              trends: '0'
+              value_type: TEXT
+              description: 'Data Item for package{#NAME}'
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$[?(@.packageName=="{#NAME}" && @.componentName=="{#COMPNAME}")].first()'
+              master_item:
+                key: stwi.updateState
+            - uuid: 41d7112df2134a5782c1251744a749c5
+              name: 'Available version for Package {#NAME}'
+              type: DEPENDENT
+              key: 'stwi.package.availversion[{#NAME}-{#COMPNAME}]'
+              delay: '0'
+              history: 5d
+              trends: '0'
+              value_type: TEXT
+              description: 'Get Available Version'
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - $.availableVersion
+              master_item:
+                key: 'stwi.getUpdateData[{#NAME}-{#COMPNAME}]'
+              tags:
+                - tag: component
+                  value: '{#COMPNAME}'
+                - tag: package
+                  value: '{#NAME}'
+            - uuid: b7ff57829f214b1ba8ee48a51459a100
+              name: 'Installed version for Package {#NAME}'
+              type: DEPENDENT
+              key: 'stwi.package.version[{#NAME}-{#COMPNAME}]'
+              delay: '0'
+              trends: '0'
+              value_type: TEXT
+              description: 'Get installed Version'
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - $.installedVersion
+              master_item:
+                key: 'stwi.getUpdateData[{#NAME}-{#COMPNAME}]'
+              tags:
+                - tag: component
+                  value: '{#COMPNAME}'
+                - tag: package
+                  value: '{#NAME}'
+          trigger_prototypes:
+            - uuid: 6e51851dc0154991884142ebf16678cb
+              expression: 'last(/Starwind VSAN by HTTPv2/stwi.package.version[{#NAME}-{#COMPNAME}])<>last(/Starwind VSAN by HTTPv2/stwi.package.availversion[{#NAME}-{#COMPNAME}])'
+              name: 'Installed version for Package {#NAME} is outdated'
+              opdata: '{ITEM.LASTVALUE1}'
+              priority: INFO
+              description: 'Triggers if available Version is not the same as installed version'
+              manual_close: 'YES'
+          master_item:
+            key: stwi.updateState
+          lld_macro_paths:
+            - lld_macro: '{#COMPNAME}'
+              path: $.componentName
+            - lld_macro: '{#NAME}'
+              path: $.packageName
+      httptests:
+        - uuid: 338c292c1db04ea28df0e471920b03de
+          name: 'Availability of API'
+          steps:
+            - name: 'API Ping'
+              url: '{$STWI.URL}api/v1/ping'
+              follow_redirects: 'NO'
+              status_codes: '200'
+      tags:
+        - tag: application
+          value: vSAN
+      macros:
+        - macro: '{$SERVICES_REGEX_ALLOW}'
+          value: (^starwind-health.service|^starwind-license-manager.service|^starwind-metrics-store.service|^starwind-san-and-nas-console.service|^starwind-updater.service|^starwind-vcenter-plugin.service|^starwind-virtual-san.service)
+          description: 'list of services'
+        - macro: '{$STWI.NODENAME}'
+          value: example01
+          description: 'The hostName of your Starwind Appliance'
+        - macro: '{$STWI.PW}'
+          value: password
+          description: 'Password of the starwind appliance. Needs to be base64 encoded!'
+        - macro: '{$STWI.URL}'
+          value: 'https://127.0.0.1/'
+          description: 'Base Url of the starwind appliance'
+        - macro: '{$STWI.USER}'
+          value: zbx
+          description: 'username of the user'
+  triggers:
+    - uuid: 02c1e41f5bda4b23b5dbb810cea4fc96
+      expression: 'last(/Starwind VSAN by HTTPv2/web.test.fail[Availability of API])<>0'
+      name: 'Starwind API is unreachable'
+      priority: HIGH
+      description: 'Trigger if web query failed'
