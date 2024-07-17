@@ -1,4 +1,4 @@
-# Zabbix-ArubaVirtualController
+# Zabbix-StarwindvSANMonitoring
 ## Overview
 This repository provides a Zabbix Monitoring Templates for {APPLICATION}.
 {INTERFACE} is used to gather values.
