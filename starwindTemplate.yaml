@@ -15,7 +15,7 @@ zabbix_export:
           name: 'starwind vSAN request Host information'
           type: SCRIPT
           key: stwi.getHost
-          history: 1d
+          history: '0'
           trends: '0'
           value_type: TEXT
           params: |
@@ -62,16 +62,6 @@ zabbix_export:
               value: '{$STWI.URL}'
             - name: username
               value: '{$STWI.USER}'
-        - uuid: e13c4494beff4047a58989eea45c20b2
-          name: 'Get General Info of Appliance'
-          type: HTTP_AGENT
-          key: stwi.reqInfo
-          delay: 10m
-          history: '0'
-          trends: '0'
-          value_type: TEXT
-          timeout: 3s
-          url: '{$STWI.URL}/api/v1/'
         - uuid: 1d17cfb3ed0d4537811eb826de9b517b
           name: 'starwind vSAN request Virtual Disk Metrics'
           type: SCRIPT
@@ -221,7 +211,7 @@ zabbix_export:
             var metric = request(api_url + 'updater/api/v2/updates/');
             var logout = logoff();
             return metric;
-          description: 'Update State'
+          description: 'Retrives information about Starwind Update Status'
           preprocessing:
             - type: JSONPATH
               parameters:
@@ -357,6 +347,7 @@ zabbix_export:
               name: 'Get Disk Metrics for {#NODEID}'
               type: SCRIPT
               key: 'stwi.discover.DisksMetrics.getMetrics[{#NODEID}]'
+              history: '0'
               trends: '0'
               value_type: TEXT
               params: |
@@ -686,6 +677,7 @@ zabbix_export:
               type: DEPENDENT
               key: 'stwi.package.version[{#NAME}-{#COMPNAME}]'
               delay: '0'
+              history: 5d
               trends: '0'
               value_type: TEXT
               description: 'Get installed Version'
