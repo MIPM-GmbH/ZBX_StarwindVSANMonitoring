@@ -3,7 +3,8 @@
 This repository provides a Zabbix Monitoring Templates for Starwind vSAN.
 HTTP web requests are used to gather values. 
 This template works without zabbix agent. Values are retrived by querying the api
-
+## Known Issues
+This template causes RAM Overflow at the moment. Be aware
 ## Disclaimer
 This is NOT a offical template. I am NOT related to starwind other than being a (happy) customer.
 Use this template at your own Risk.
