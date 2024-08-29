@@ -391,6 +391,7 @@ zabbix_export:
                 var token = JSON.parse(getBearerToken()).accessToken;
                 var nodeid = obj.nodeid;
                 var metric = request(api_url + 'api/v1/managedAppliances/' + nodeid + '/resourceMonitor/disk/query');
+                var logout = logoff();
                 return metric;
               preprocessing:
                 - type: JSONPATH
