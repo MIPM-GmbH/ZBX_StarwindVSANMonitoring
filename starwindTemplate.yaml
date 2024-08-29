@@ -16,8 +16,8 @@ zabbix_export:
           type: SCRIPT
           key: stwi.getHost
           history: '0'
-          trends: '0'
           value_type: TEXT
+          trends: '0'
           params: |
             function getBearerToken() {
                 const auth_url = api_url+ 'api/v2/account/login';
@@ -35,7 +35,7 @@ zabbix_export:
                 return response;
             }
             function logoff() {
-                var logouturl = api_url + 'api/v2/account/logout'
+                var logouturl = api_url + 'api/v2/account/logout';
                 var req = new HttpRequest();
                 req.addHeader('Authorization: ' + token);
                 req.addHeader('Content-Type: application/x-www-form-urlencoded ');
@@ -67,8 +67,8 @@ zabbix_export:
           type: SCRIPT
           key: stwi.reqMetrics
           history: '0'
-          trends: '0'
           value_type: TEXT
+          trends: '0'
           params: |
             function getBearerToken() {
                 const auth_url = api_url+ 'api/v2/account/login';
@@ -86,7 +86,7 @@ zabbix_export:
                 return response;
             }
             function logoff() {
-                var logouturl = api_url + 'api/v2/account/logout'
+                var logouturl = api_url + 'api/v2/account/logout';
                 var req = new HttpRequest();
                 req.addHeader('Authorization: ' + token);
                 req.addHeader('Content-Type: application/x-www-form-urlencoded ');
@@ -122,8 +122,8 @@ zabbix_export:
           type: SCRIPT
           key: stwi.services
           history: '0'
-          trends: '0'
           value_type: TEXT
+          trends: '0'
           params: |
             function getBearerToken() {
                 const auth_url = api_url+ 'api/v2/account/login';
@@ -141,7 +141,7 @@ zabbix_export:
                 return response;
             }
             function logoff() {
-                var logouturl = api_url + 'api/v2/account/logout'
+                var logouturl = api_url + 'api/v2/account/logout';
                 var req = new HttpRequest();
                 req.addHeader('Authorization: ' + token);
                 req.addHeader('Content-Type: application/x-www-form-urlencoded ');
@@ -173,42 +173,52 @@ zabbix_export:
           key: stwi.updateState
           delay: 1d
           history: '0'
-          trends: '0'
           value_type: TEXT
+          trends: '0'
           params: |
-            function postreq(url,payload) {
+            function getBearerToken() {
+                const auth_url = api_url+ 'api/v2/account/login';
+                const payload = JSON.stringify({"userName": username,"password": pw,"autologin": false});
                 var req = new HttpRequest();
-                const response= req.post(url,payload);
-                req.addHeader('Authorization: ' + token);
+                const response= req.post(auth_url,payload);
+                return response;
+            }
+            function postreq(url) {
+                post = new HttpRequest();
+                post.addHeader('Authorization: ' + token);
+                const response= post.post(url);
                 return response;
             }
             function request(url) {
                 api_request = new HttpRequest();
-                api_request.addHeader('Authorization: ' + token);
-                api_request.addHeader('Content-Type: application/json');
+                api_request.addHeader('authorization: ' + token);
                 Zabbix.log(4, '[ STAR] Sending request: ' + url);
-                var response = api_request.get(url);
-                return response;
+                const resp = api_request.get(url);
+                return resp;
             }
             function logoff() {
-                var logouturl = api_url + 'api/v2/account/logout'
+                var logouturl = api_url + 'api/v2/account/logout';
                 var req = new HttpRequest();
-                req.addHeader('Authorization: ' + token);
-                req.addHeader('Content-Type: application/x-www-form-urlencoded ');
+                req.addHeader('authorization: ' + origtoken);
+                req.addHeader('Content-Type: application/x-www-form-urlencoded');
                 const response= req.post(logouturl);
-                return response;
+                status = req.getStatus();
+                return status;
             }
             var obj = JSON.parse(value);
+            var host = obj.host;
             var api_url = obj.url;
             var username = obj.username;
             var pw = btoa(obj.pw);
-            var token = JSON.parse(postreq(api_url+ 'api/v2/account/login',JSON.stringify({"userName": username,"password": pw,"autologin": false}))).accessToken;
-            postreq(api_url+ 'updater/api/v2/updates/check');
+            var token = JSON.parse(getBearerToken()).accessToken;
+            origtoken=token;
+            token = JSON.parse(postreq(api_url+ 'api/v1/update/auth/token')).token;
+            postreq = postreq(api_url+ 'updater/api/v2/updates/check');
             var state;
             do{
             var state=JSON.parse(request(api_url+ 'updater/api/v2/status/state')).state;
             }while (state=='CHECKING');
-            var metric = request(api_url + 'updater/api/v2/updates/');
+            var metric = request(api_url + 'updater/api/v2/updates');
             var logout = logoff();
             return metric;
           description: 'Retrives information about Starwind Update Status'
@@ -224,8 +234,8 @@ zabbix_export:
                   json.forEach(function(element){
                    var componentname = element.name;
                    element.packages.forEach(function(element2){
-                  element2.componentName = componentname
-                  outpack.push(element2)
+                  element2.componentName = componentname;
+                  outpack.push(element2);
                   })
                   });
                   return JSON.stringify(outpack);
@@ -255,8 +265,8 @@ zabbix_export:
               key: 'stwi.discover.getAvail[{#VOLUME}]'
               delay: '0'
               history: 90d
-              trends: '0'
               value_type: TEXT
+              trends: '0'
               description: 'availability of volume'
               preprocessing:
                 - type: JSONPATH
@@ -285,8 +295,8 @@ zabbix_export:
               key: 'stwi.discover.getStatus[{#VOLUME}]'
               delay: '0'
               history: 90d
-              trends: '0'
               value_type: TEXT
+              trends: '0'
               preprocessing:
                 - type: JSONPATH
                   parameters:
@@ -313,8 +323,8 @@ zabbix_export:
               key: 'stwi.discoverMetrics[{#VOLUME}]'
               delay: '0'
               history: '0'
-              trends: '0'
               value_type: TEXT
+              trends: '0'
               preprocessing:
                 - type: JSONPATH
                   parameters:
@@ -348,8 +358,8 @@ zabbix_export:
               type: SCRIPT
               key: 'stwi.discover.DisksMetrics.getMetrics[{#NODEID}]'
               history: '0'
-              trends: '0'
               value_type: TEXT
+              trends: '0'
               params: |
                 function getBearerToken() {
                     const auth_url = api_url+ 'api/v2/account/login';
@@ -367,7 +377,7 @@ zabbix_export:
                     return response;
                 }
                 function logoff() {
-                    var logouturl = api_url + 'api/v2/account/logout'
+                    var logouturl = api_url + 'api/v2/account/logout';
                     var req = new HttpRequest();
                     req.addHeader('Authorization: ' + token);
                     req.addHeader('Content-Type: application/x-www-form-urlencoded ');
@@ -453,8 +463,8 @@ zabbix_export:
               type: DEPENDENT
               key: 'stwi.getServices.Status[{#ID}]'
               delay: '0'
-              trends: '0'
               value_type: TEXT
+              trends: '0'
               description: 'Status of service {#TITLE}'
               preprocessing:
                 - type: JSONPATH
@@ -476,8 +486,8 @@ zabbix_export:
               key: 'stwi.getService[{#ID}]'
               delay: '0'
               history: '0'
-              trends: '0'
               value_type: TEXT
+              trends: '0'
               preprocessing:
                 - type: JSONPATH
                   parameters:
@@ -527,8 +537,8 @@ zabbix_export:
               key: 'stwi.discover.SyncMetrics.get.Status[{#VOLUME}]'
               delay: '0'
               history: 90d
-              trends: '0'
               value_type: TEXT
+              trends: '0'
               description: 'Sync Status'
               preprocessing:
                 - type: JSONPATH
@@ -608,8 +618,8 @@ zabbix_export:
               key: 'stwi.discover.SyncMetrics.get[{#VOLUME}]'
               delay: '0'
               history: '0'
-              trends: '0'
               value_type: TEXT
+              trends: '0'
               preprocessing:
                 - type: JSONPATH
                   parameters:
@@ -643,8 +653,8 @@ zabbix_export:
               key: 'stwi.getUpdateData[{#NAME}-{#COMPNAME}]'
               delay: '0'
               history: '0'
-              trends: '0'
               value_type: TEXT
+              trends: '0'
               description: 'Data Item for package{#NAME}'
               preprocessing:
                 - type: JSONPATH
@@ -658,8 +668,8 @@ zabbix_export:
               key: 'stwi.package.availversion[{#NAME}-{#COMPNAME}]'
               delay: '0'
               history: 5d
-              trends: '0'
               value_type: TEXT
+              trends: '0'
               description: 'Get Available Version'
               preprocessing:
                 - type: JSONPATH
@@ -678,8 +688,8 @@ zabbix_export:
               key: 'stwi.package.version[{#NAME}-{#COMPNAME}]'
               delay: '0'
               history: 5d
-              trends: '0'
               value_type: TEXT
+              trends: '0'
               description: 'Get installed Version'
               preprocessing:
                 - type: JSONPATH
